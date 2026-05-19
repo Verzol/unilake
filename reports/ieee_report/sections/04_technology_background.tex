@@ -1,0 +1,21 @@
+\section{Nền tảng công nghệ}
+
+\subsection{Parquet fallback}
+
+Trong UniLake, Parquet fallback là đường lưu trữ trực tiếp theo thư mục: Spark ghi DataFrame đã chuẩn hóa thành file Parquet, sau đó đọc lại bằng Spark SQL. Tài liệu Spark 3.5.1 nêu rõ Spark SQL hỗ trợ đọc và ghi Parquet, đồng thời bảo toàn schema của dữ liệu gốc trong nhiều workflow DataFrame/SQL~\cite{sparkParquetDocs}. Parquet phù hợp với workload phân tích vì tổ chức dữ liệu theo cột, giúp engine chỉ đọc các cột cần thiết thay vì scan toàn bộ record theo hàng.
+
+Tuy nhiên, Parquet tự thân không phải một hệ quản trị bảng. Khi dữ liệu được lưu thành nhiều file theo thư mục, các vấn đề như snapshot nhất quán, thay đổi schema, partition evolution, xóa/cập nhật logic, hoặc nhiều engine cùng đọc/ghi cần thêm lớp metadata bên ngoài. Vì vậy, Parquet fallback trong báo cáo được xem là baseline kỹ thuật, không phải đại diện đầy đủ cho toàn bộ legacy production stack.
+
+\subsection{Apache Iceberg}
+
+Iceberg là table format cho analytic datasets. Theo đặc tả Iceberg, trạng thái bảng được duy trì trong metadata files; mỗi thay đổi tạo metadata mới và snapshot biểu diễn trạng thái nhất quán của bảng tại một thời điểm~\cite{icebergSpec}. Iceberg không phủ nhận vai trò của Parquet; ngược lại, Iceberg có thể quản lý các data files ở định dạng Parquet, Avro hoặc ORC. Điểm khác biệt nằm ở lớp metadata, snapshot và quy tắc tiến hóa schema/partition.
+
+Trong UniLake, Spark ghi Iceberg table bằng DataFrameWriterV2. Việc dùng API này phù hợp với khuyến nghị của Iceberg Spark docs vì hành vi ghi bảng rõ ràng hơn so với DataFrameWriterV1, hỗ trợ các thao tác create, replace, append và overwrite theo ngữ nghĩa bảng~\cite{icebergSparkWrites}.
+
+\subsection{MinIO và object storage}
+
+MinIO được dùng như object storage cục bộ tương thích S3~\cite{minioS3Compatibility}. Mục tiêu không phải mô phỏng đầy đủ cloud object storage ở quy mô production, mà tạo một endpoint S3A đủ nhẹ để Spark và Iceberg có thể ghi warehouse Iceberg. Cách triển khai này phù hợp với nguyên tắc Docker-first của đề tài: người dùng Windows chạy qua WSL2 Ubuntu, không cần cài native Spark, Hadoop, Java hoặc \texttt{winutils.exe}.
+
+\subsection{Trino và StarRocks}
+
+Trino và StarRocks không nằm trong core benchmark của UniLake. Tuy nhiên, chúng là các engine SQL tương tác quan trọng trong kiến trúc lakehouse. Tài liệu Trino và StarRocks đều mô tả khả năng truy cập Iceberg thông qua connector/catalog~\cite{trinoIcebergDocs,starrocksIcebergDocs}. Vì chưa được triển khai trong benchmark, mọi nhận định về Trino/StarRocks trong báo cáo chỉ được xem là định hướng mở rộng, không phải kết quả thực nghiệm.

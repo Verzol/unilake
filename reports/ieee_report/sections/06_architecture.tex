@@ -1,0 +1,43 @@
+\section{Kiến trúc đề xuất}
+
+\subsection{Kiến trúc legacy tham chiếu}
+
+Hình~\ref{fig:legacy-architecture} mô tả baseline legacy: Kafka tiếp nhận sự kiện, Spark xử lý dữ liệu, HDFS/Parquet lưu trữ file, Presto/Trino cung cấp SQL analytics. Mô hình này phù hợp với nhiều hệ thống Big Data truyền thống vì các thành phần đã trưởng thành và có cộng đồng lớn. Tuy nhiên, khi triển khai đầy đủ trong local, stack này đòi hỏi nhiều service, nhiều cấu hình và tài nguyên tương đối cao.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.48\textwidth]{architecture_legacy.png}
+\caption{Kiến trúc Big Data truyền thống tham chiếu.}
+\label{fig:legacy-architecture}
+\end{figure}
+
+\subsection{Kiến trúc modern của UniLake}
+
+Hình~\ref{fig:modern-architecture} mô tả kiến trúc modern: Redpanda thay cho Kafka trong prototype nhẹ, Spark là engine xử lý, MinIO là object storage cục bộ, Iceberg là table format, Spark SQL là query layer chính. Trino/StarRocks được xem là phần mở rộng có thể thêm vào sau, nhưng không chặn benchmark lõi.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.48\textwidth]{architecture_modern.png}
+\caption{Kiến trúc lakehouse hiện đại của UniLake.}
+\label{fig:modern-architecture}
+\end{figure}
+
+Điểm cốt lõi của kiến trúc modern không phải là thay Parquet bằng Iceberg, mà là bổ sung lớp quản lý bảng trên object storage. Iceberg tạo ra abstraction bảng logic, trong khi dữ liệu vật lý vẫn có thể là file Parquet. Điều này làm cho hệ thống dễ mở rộng sang các engine khác hơn so với việc mỗi engine tự hiểu các thư mục Parquet rời rạc.
+
+\begin{table}[htbp]
+\centering
+\caption{So sánh kiến trúc legacy và modern trong phạm vi UniLake}
+\label{tab:architecture-comparison}
+\begin{tabular}{p{0.25\linewidth}p{0.31\linewidth}p{0.31\linewidth}}
+\toprule
+Tiêu chí & Legacy Big Data & Modern Lakehouse \\
+\midrule
+Ingestion & Kafka & Redpanda tương thích Kafka API \\
+Xử lý & Spark batch/SQL & Spark batch/SQL \\
+Lưu trữ & HDFS hoặc Parquet thư mục & MinIO object storage \\
+Định dạng dữ liệu & Parquet file & Iceberg table quản lý Parquet files \\
+Metadata & Phụ thuộc catalog/engine & Metadata, snapshot, manifest của Iceberg \\
+Query layer & Presto/Trino & Spark SQL, mở rộng Trino/StarRocks \\
+\bottomrule
+\end{tabular}
+\end{table}

@@ -1,0 +1,48 @@
+services:
+  spark:
+    build:
+      context: .
+      dockerfile: Dockerfile.spark
+    container_name: unilake-spark
+    working_dir: /app
+    volumes:
+      - .:/app
+      - spark-ivy-cache:/root/.ivy2
+    environment:
+      AWS_ACCESS_KEY_ID: minioadmin
+      AWS_SECRET_ACCESS_KEY: minioadmin
+      AWS_REGION: us-east-1
+    depends_on:
+      - minio
+    command: bash
+    tty: true
+
+  minio:
+    image: minio/minio:latest
+    container_name: unilake-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio-data:/data
+    command: server /data --console-address ":9001"
+
+  mc:
+    image: minio/mc:latest
+    container_name: unilake-minio-init
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      sleep 5;
+      mc alias set local http://minio:9000 minioadmin minioadmin;
+      mc mb -p local/warehouse || true;
+      mc ls local;
+      "
+
+volumes:
+  minio-data:
+  spark-ivy-cache:

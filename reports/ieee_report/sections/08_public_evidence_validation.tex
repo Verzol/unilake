@@ -1,0 +1,24 @@
+\section{Đối chiếu với nghiên cứu và nguồn công khai}
+
+Bảng~\ref{tab:public-validation} đối chiếu các nhận định từ nguồn học thuật/chính thức với quan sát trong prototype UniLake. Mục tiêu của bảng là phân biệt rõ điều gì đã được benchmark local hỗ trợ, điều gì chỉ được hỗ trợ ở mức kiến trúc, và điều gì chưa được kiểm chứng.
+
+\begin{table*}[htbp]
+\centering
+\caption{Đối chiếu nguồn công khai với quan sát cục bộ}
+\label{tab:public-validation}
+\begin{tabularx}{\textwidth}{X p{0.18\textwidth} X p{0.16\textwidth} X}
+\toprule
+Nhận định công khai & Loại nguồn & Quan sát trong UniLake & Mức độ hỗ trợ & Diễn giải \\
+\midrule
+Lakehouse thống nhất data lake và data warehouse bằng định dạng mở, metadata và khả năng hỗ trợ analytics/ML. & Bài báo học thuật~\cite{lakehousePaper} & UniLake dùng MinIO, Parquet và Iceberg metadata trong một workflow Spark. & Hỗ trợ một phần & Đúng ở mức prototype kiến trúc, chưa chứng minh production-scale. \\
+Spark là engine thống nhất cho batch, SQL, streaming và ML. & Bài báo/tài liệu~\cite{sparkCacm,sparkParquetDocs} & Benchmark dùng Spark cho cả làm sạch, ghi, đọc và Spark SQL. & Hỗ trợ trực tiếp & Engine xử lý được giữ cố định để so sánh storage/table layer. \\
+Parquet là định dạng file cột phù hợp workload phân tích. & Tài liệu Spark và nền tảng Dremel~\cite{sparkParquetDocs,dremelPaper} & Parquet fallback ghi/đọc thành công trên cả ba bảng. & Hỗ trợ trực tiếp & Parquet là baseline hợp lệ cho data lake file-based. \\
+Iceberg quản lý bảng qua metadata, snapshot và manifest; có thể quản lý file Parquet/Avro/ORC. & Đặc tả chính thức~\cite{icebergSpec} & Iceberg table được tạo trong warehouse MinIO bằng Spark. & Hỗ trợ kiến trúc & Prototype xác nhận workflow table format, không biến Iceberg thành file format thay thế Parquet. \\
+Iceberg Spark hỗ trợ DataFrameWriterV2. & Tài liệu chính thức~\cite{icebergSparkWrites} & Script dùng \texttt{writeTo(...).using("iceberg").create()}. & Hỗ trợ trực tiếp & 18/18 dòng benchmark có \texttt{status=OK}. \\
+Trino/StarRocks có thể truy vấn Iceberg qua connector/catalog. & Tài liệu chính thức~\cite{trinoIcebergDocs,starrocksIcebergDocs} & Trino/StarRocks chưa được chạy trong benchmark. & Chưa kiểm chứng & Phù hợp future work, không dùng làm bằng chứng hiệu năng hiện tại. \\
+Iceberg nhanh hơn Parquet trong mọi workload. & Không có bằng chứng tổng quát trong phạm vi khảo sát & Benchmark local ghi nhận Iceberg thấp hơn Parquet fallback trong lần chạy này. & Chỉ hỗ trợ cục bộ và có điều kiện & Không khái quát hóa; cần workload, file layout và cụm lớn hơn để kết luận rộng. \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+Kết quả đối chiếu cho thấy UniLake hỗ trợ tốt các nhận định về workflow và kiến trúc lakehouse, nhưng chỉ cung cấp bằng chứng hiệu năng ở phạm vi local. Đây là điểm quan trọng khi viết kết luận: lợi ích cốt lõi của Iceberg trong báo cáo nên được trình bày là quản lý bảng, metadata, snapshot và khả năng mở rộng engine, còn lợi thế thời gian chạy chỉ là quan sát cục bộ trong lần benchmark này.

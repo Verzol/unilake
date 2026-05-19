@@ -1,0 +1,17 @@
+\section{Thảo luận}
+
+\subsection{Ý nghĩa của kết quả local}
+
+Benchmark cho thấy đường Iceberg có thời gian trung bình thấp hơn Parquet fallback trong các thao tác được đo. Tuy nhiên, cần đọc kết quả này cùng với độ lệch chuẩn. Ví dụ, \texttt{retail\_transactions} có độ lệch chuẩn lớn ở thao tác ghi và truy vấn, đặc biệt do lần chạy đầu thường chịu ảnh hưởng của warm-up, cache, planning hoặc trạng thái container. Vì vậy, thay vì nhấn mạnh một kết luận tuyệt đối về tốc độ, báo cáo xem kết quả này như bằng chứng rằng workflow Iceberg trên MinIO có thể chạy thành công và có hiệu năng local cạnh tranh với Parquet fallback.
+
+\subsection{Vì sao không so sánh legacy production đầy đủ?}
+
+Một benchmark hoàn toàn đối xứng giữa legacy và modern stack sẽ cần dựng Kafka, HDFS, Spark cluster, Trino/Presto, object storage, catalog và các query workload tương đương. Nếu chỉ dựng một phần hoặc cấu hình không cân bằng, kết quả có thể phản ánh tài nguyên Docker hơn là khác biệt kiến trúc. Vì vậy UniLake chọn cách tách biệt: legacy stack được phân tích qua bài báo và tài liệu kiến trúc; benchmark local chỉ so sánh Parquet fallback và Iceberg bằng cùng Spark engine.
+
+\subsection{Vai trò của Parquet trong lakehouse}
+
+Một hiểu nhầm phổ biến là Iceberg thay thế Parquet. Trong thực tế, Iceberg quản lý bảng còn Parquet thường vẫn là định dạng file vật lý. Vì vậy, kết luận đúng không phải ``Iceberg tốt hơn Parquet'', mà là ``trên cùng một file format cột, table format như Iceberg bổ sung metadata, snapshot và quản lý schema/partition''. Benchmark UniLake được thiết kế để tránh lỗi diễn giải này.
+
+\subsection{Hạn chế}
+
+Các hạn chế chính gồm: benchmark chạy trên một máy cục bộ, số lần chạy là 3, dữ liệu vẫn nhỏ so với production, Spark chạy local mode, MinIO chạy trong Docker, và chưa có concurrent readers/writers. Báo cáo cũng chưa kiểm thử schema evolution, time travel, partition evolution, compaction hoặc engine interoperability bằng Trino/StarRocks. Những phần này cần được xem là hướng mở rộng nếu UniLake được phát triển thành benchmark sâu hơn.

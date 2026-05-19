@@ -1,0 +1,4 @@
+{"event_time":"2020-07-12T00:01:34Z","device_id":"b8:27:eb:bf:9d:51","temperature":22.7,"humidity":51.0,"co":0.0049559386,"lpg":0.0076508223,"smoke":0.0204112701,"light":false,"motion":false}
+{"event_time":"2020-07-12T00:01:34Z","device_id":"00:0f:00:70:91:0a","temperature":19.7,"humidity":76.0,"co":0.0028400886,"lpg":0.0051143834,"smoke":0.0132748367,"light":false,"motion":false}
+{"event_time":"2020-07-12T00:01:38Z","device_id":"b8:27:eb:bf:9d:51","temperature":22.6,"humidity":50.9,"co":0.0049760123,"lpg":0.0076732274,"smoke":0.0204751256,"light":false,"motion":false}
+{"event_time":"2020-07-12T00:01:39Z","device_id":"1c:bf:ce:15:ec:4d","temperature":27.0,"humidity":76.8,"co":0.0044030268,"lpg":0.0070233371,"smoke":0.0186282254,"light":true,"motion":false}

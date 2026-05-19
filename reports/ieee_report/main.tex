@@ -1,0 +1,74 @@
+\documentclass[conference]{IEEEtran}
+\usepackage[utf8]{inputenc}
+\usepackage[T5]{fontenc}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{url}
+\usepackage{cite}
+\usepackage{amsmath}
+
+\graphicspath{{figures/}}
+
+\begin{document}
+
+\title{UniLake: So sánh kiến trúc Big Data truyền thống và Lakehouse hiện đại cho phân tích dữ liệu đa miền}
+
+\author{
+\IEEEauthorblockN{Giang Tuan Minh}
+\IEEEauthorblockA{Information Systems\\
+University of Engineering and Technology, VNU\\
+Hanoi, Vietnam\\
+giangtuanminh2703@gmail.com}
+\and
+\IEEEauthorblockN{Nguyen Van Bien}
+\IEEEauthorblockA{Computer Science\\
+University of Engineering and Technology, VNU\\
+Hanoi, Vietnam\\
+nguyenbien5102005@gmail.com}
+\and
+\IEEEauthorblockN{Le Van Tam}
+\IEEEauthorblockA{Information Systems\\
+University of Engineering and Technology, VNU\\
+Hanoi, Vietnam\\
+levantam12012005a@gmail.com}
+\and
+\IEEEauthorblockN{Nguyen Quang Hieu}
+\IEEEauthorblockA{Computer Science\\
+University of Engineering and Technology, VNU\\
+Hanoi, Vietnam\\
+nguyenquanghieu1032005@gmail.com}
+\and
+\IEEEauthorblockN{Dinh Van An}
+\IEEEauthorblockA{Information Systems\\
+University of Engineering and Technology, VNU\\
+Hanoi, Vietnam\\
+andinh3072005@gmail.com}
+}
+
+\maketitle
+
+\begin{abstract}
+Báo cáo này trình bày UniLake, một nguyên mẫu lakehouse cục bộ nhằm so sánh đường xử lý file-based Parquet fallback với đường xử lý bảng Apache Iceberg trên MinIO, đồng thời đặt kết quả đó trong bối cảnh so sánh giữa kiến trúc Big Data truyền thống và kiến trúc lakehouse hiện đại. Kiến trúc tham chiếu truyền thống gồm Kafka, Spark, HDFS/Parquet và Presto/Trino; kiến trúc hiện đại gồm Redpanda, Spark, MinIO, Apache Iceberg và Spark SQL. Thực nghiệm sử dụng ba miền dữ liệu: giao dịch bán lẻ, dữ liệu văn bản sentiment và dữ liệu cảm biến IoT. Benchmark cục bộ chạy 3 lần cho mỗi bảng và mỗi đường lưu trữ, đo thời gian ghi, đọc/đếm và truy vấn tổng hợp. Kết quả cho thấy trong môi trường Docker cục bộ, đường Iceberg trên MinIO có thời gian trung bình thấp hơn Parquet fallback trong các thao tác được đo. Tuy nhiên, báo cáo không khái quát hóa Iceberg là luôn nhanh hơn Parquet, vì Iceberg là table format quản lý metadata/snapshot trên các file dữ liệu, còn Parquet là file format cột. Đóng góp chính của UniLake là một quy trình thực nghiệm có thể tái lập, phân biệt rõ bằng chứng benchmark cục bộ, bằng chứng học thuật/công khai và lập luận kiến trúc.
+\end{abstract}
+
+\begin{IEEEkeywords}
+UniLake, Big Data, Lakehouse, Apache Spark, Apache Iceberg, Apache Parquet, MinIO, benchmark cục bộ.
+\end{IEEEkeywords}
+
+\input{sections/01_introduction}
+\input{sections/02_problem_definition}
+\input{sections/03_related_work}
+\input{sections/04_technology_background}
+\input{sections/05_methodology}
+\input{sections/06_architecture}
+\input{sections/07_experimental_results}
+\input{sections/08_public_evidence_validation}
+\input{sections/09_discussion}
+\input{sections/10_recommendation_conclusion}
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}

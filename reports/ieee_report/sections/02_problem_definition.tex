@@ -1,0 +1,21 @@
+\section{Định nghĩa bài toán}
+
+Bài toán trung tâm của UniLake là đánh giá một cách có kiểm soát sự khác biệt giữa hai đường lưu trữ/phân tích trên cùng một Spark engine:
+
+\begin{itemize}
+\item \textbf{Đường A -- Parquet fallback}: Spark làm sạch dữ liệu, ghi dữ liệu ra các thư mục Parquet, sau đó đọc lại và chạy truy vấn tổng hợp bằng Spark SQL.
+\item \textbf{Đường B -- Iceberg trên MinIO}: Spark làm sạch cùng dữ liệu, ghi dữ liệu thành Iceberg table trong warehouse đặt trên MinIO, sau đó đọc lại bảng và chạy truy vấn tổng hợp tương đương.
+\end{itemize}
+
+Hai đường này không phải là so sánh ``Parquet thay thế Iceberg'' hoặc ``Iceberg thay thế Parquet''. Parquet là file format cột; Iceberg là table format quản lý metadata, snapshot, schema và danh sách data files. Trong nhiều cấu hình, Iceberg vẫn sử dụng Parquet làm định dạng file vật lý. Vì vậy, câu hỏi nghiên cứu hợp lệ hơn là: khi cùng dùng Spark và cùng một bộ dữ liệu, việc đặt một lớp table format Iceberg trên object storage cục bộ tạo ra workflow và kết quả benchmark như thế nào so với đọc/ghi Parquet trực tiếp theo thư mục?
+
+Báo cáo cần trả lời bốn câu hỏi:
+
+\begin{enumerate}
+\item Prototype UniLake chứng minh được điều gì trong phạm vi cục bộ?
+\item Các công trình học thuật và tài liệu chính thức nói gì về legacy Big Data stack và lakehouse/open table formats?
+\item Những nhận định nào từ nguồn công khai được kết quả local hỗ trợ?
+\item Những nhận định nào vẫn chưa được kiểm chứng do giới hạn phần cứng, dữ liệu và phạm vi triển khai?
+\end{enumerate}
+
+Để tránh kết luận sai, mọi phát biểu về hiệu năng trong báo cáo đều dựa trên \texttt{benchmark/results/benchmark\_results.csv}, \texttt{benchmark/results/benchmark\_summary.csv} hoặc các hình được sinh từ các file này. Nếu một thành phần không được triển khai trong core benchmark, báo cáo ghi rõ là chưa kiểm chứng.

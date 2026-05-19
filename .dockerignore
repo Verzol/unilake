@@ -1,0 +1,9 @@
+.git
+.venv
+__pycache__
+*.pyc
+data/raw/*
+data/processed/*
+benchmark/results/*.csv
+reports/figures/*.png
+reports/tables/*.csv

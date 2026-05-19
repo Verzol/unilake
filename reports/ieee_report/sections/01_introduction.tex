@@ -1,0 +1,11 @@
+\section{Giới thiệu}
+
+Trong nhiều hệ thống phân tích dữ liệu hiện đại, dữ liệu không còn xuất hiện dưới một định dạng duy nhất. Một pipeline phân tích thực tế thường phải kết hợp dữ liệu giao dịch có cấu trúc, văn bản ngắn đã gán nhãn, log sự kiện và tín hiệu cảm biến theo thời gian. Điều này làm cho bài toán Big Data không chỉ là bài toán lưu trữ khối lượng lớn, mà còn là bài toán tổ chức dữ liệu đa miền sao cho có thể xử lý, truy vấn, kiểm chứng và mở rộng bằng nhiều engine khác nhau.
+
+Kiến trúc Big Data truyền thống thường được mô tả bằng chuỗi Kafka--Spark--HDFS/Parquet--Presto/Trino--Analytics. Trong kiến trúc này, Kafka đảm nhiệm ingestion dữ liệu luồng, Spark xử lý batch/SQL, HDFS lưu trữ dữ liệu phân tán, Parquet tối ưu lưu trữ cột, còn Presto/Trino cung cấp lớp truy vấn SQL tương tác. Mô hình này có lịch sử triển khai lâu dài và được hỗ trợ bởi nhiều công trình nền tảng. Tuy nhiên, khi áp dụng vào môi trường học tập hoặc prototype trên máy cá nhân, việc dựng đầy đủ HDFS, broker, query engine và catalog thường phát sinh chi phí vận hành đáng kể.
+
+Kiến trúc lakehouse hiện đại tìm cách giảm khoảng cách giữa data lake và data warehouse bằng cách lưu dữ liệu trên object storage ở định dạng mở, đồng thời thêm lớp quản lý bảng, metadata, schema, snapshot và transaction log. Trong UniLake, đường hiện đại được hiện thực hóa bằng Redpanda, Spark, MinIO và Apache Iceberg. Đường thực nghiệm được so sánh trực tiếp là Spark ghi/đọc Parquet fallback theo thư mục và Spark ghi/đọc Iceberg table trên MinIO.
+
+Mục tiêu của báo cáo là xây dựng một đánh giá thận trọng theo ba tầng bằng chứng. Tầng thứ nhất là benchmark cục bộ dựa trên các file CSV thật trong phạm vi đề tài. Tầng thứ hai là tài liệu học thuật và tài liệu chính thức về Kafka, HDFS, Spark, Presto, Lakehouse, Delta Lake, Iceberg và Parquet. Tầng thứ ba là lập luận kiến trúc nhằm giải thích vì sao table format có thể hữu ích ngay cả khi dữ liệu vật lý vẫn được lưu dưới dạng Parquet.
+
+Tên hệ thống trong báo cáo là \textit{UniLake}. Báo cáo không mô tả UniLake như một hệ thống production-scale, mà như một nguyên mẫu Docker-first cho Windows/WSL2, có thể chạy lại, kiểm tra kết quả và phục vụ một báo cáo IEEE-style bằng tiếng Việt.

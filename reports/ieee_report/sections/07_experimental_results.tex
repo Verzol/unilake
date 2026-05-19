@@ -1,0 +1,66 @@
+\section{Thiết lập thực nghiệm và kết quả}
+
+\subsection{Môi trường chạy}
+
+Benchmark được chạy bằng Docker Compose trong môi trường cục bộ. Spark container dùng Spark 3.5.1; Iceberg runtime dùng \texttt{org.apache.iceberg:iceberg-spark-runtime-3.5\_2.12:1.5.2}; Hadoop AWS dùng \texttt{hadoop-aws:3.3.4}; MinIO cung cấp endpoint S3A \texttt{http://minio:9000}. Kết quả được ghi vào \texttt{benchmark/results/benchmark\_results.csv} và tổng hợp vào \texttt{benchmark/results/benchmark\_summary.csv}.
+
+\subsection{Workload truy vấn}
+
+Ba truy vấn tổng hợp được dùng để đại diện cho ba miền dữ liệu:
+
+\begin{itemize}
+\item Retail: top quốc gia theo doanh thu, số hóa đơn và tổng doanh thu.
+\item Sentiment: số tweet theo nhãn sentiment.
+\item IoT: tổng hợp theo thiết bị và giờ, gồm số sự kiện, nhiệt độ trung bình, độ ẩm trung bình và số lần motion.
+\end{itemize}
+
+\subsection{Kết quả benchmark}
+
+Bảng~\ref{tab:benchmark-summary} trình bày thời gian trung bình của 3 lần chạy cho mỗi bảng và mỗi đường lưu trữ. Tất cả 18 dòng raw benchmark đều có \texttt{status=OK}. Các số liệu trong bảng được lấy trực tiếp từ \texttt{benchmark/results/benchmark\_summary.csv}.
+
+\begin{table*}[htbp]
+\centering
+\caption{Kết quả benchmark Parquet fallback và Iceberg trên MinIO}
+\label{tab:benchmark-summary}
+\begin{tabular}{llrrrr}
+\toprule
+Bảng & Đường lưu trữ & Ghi TB (s) & Đọc/đếm TB (s) & Truy vấn TB (s) & Số dòng \\
+\midrule
+\texttt{retail\_transactions} & \texttt{parquet\_fallback} & 1.946694 & 0.216435 & 0.877848 & 531283 \\
+\texttt{retail\_transactions} & \texttt{iceberg\_minio} & 1.801077 & 0.180938 & 0.682644 & 531283 \\
+\texttt{twitter\_sentiment} & \texttt{parquet\_fallback} & 0.979131 & 0.179304 & 0.384057 & 75682 \\
+\texttt{twitter\_sentiment} & \texttt{iceberg\_minio} & 0.556811 & 0.078838 & 0.256339 & 75682 \\
+\texttt{iot\_sensor\_events} & \texttt{parquet\_fallback} & 1.367450 & 0.102305 & 0.303978 & 405184 \\
+\texttt{iot\_sensor\_events} & \texttt{iceberg\_minio} & 0.708538 & 0.072717 & 0.281392 & 405184 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+Trong lần chạy này, đường Iceberg trên MinIO có thời gian trung bình thấp hơn Parquet fallback ở cả ba thao tác ghi, đọc/đếm và truy vấn tổng hợp trên ba bảng. Ví dụ, với \texttt{iot\_sensor\_events}, thời gian ghi trung bình giảm từ 1.367450 giây xuống 0.708538 giây, còn thời gian đọc/đếm giảm từ 0.102305 giây xuống 0.072717 giây. Với \texttt{twitter\_sentiment}, thời gian đọc/đếm trung bình giảm từ 0.179304 giây xuống 0.078838 giây.
+
+Tuy nhiên, các số liệu này không chứng minh Iceberg luôn nhanh hơn Parquet. Iceberg vẫn thường quản lý các file Parquet ở tầng vật lý. Chênh lệch trong benchmark local có thể đến từ file layout, cache, kích thước file, metadata planning, trạng thái Docker, MinIO local hoặc thứ tự chạy. Vì vậy, kết quả chỉ được xem là bằng chứng local có điều kiện.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.48\textwidth]{write_latency_comparison.png}
+\caption{So sánh thời gian ghi trung bình giữa Parquet fallback và Iceberg.}
+\label{fig:write-latency}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.48\textwidth]{read_latency_comparison.png}
+\caption{So sánh thời gian đọc/đếm trung bình giữa Parquet fallback và Iceberg.}
+\label{fig:read-latency}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.48\textwidth]{query_latency_comparison.png}
+\caption{So sánh thời gian truy vấn tổng hợp trung bình giữa Parquet fallback và Iceberg.}
+\label{fig:query-latency}
+\end{figure}
+
+\subsection{Ghi chú về dữ liệu retail}
+
+CSV retail ban đầu có 541.909 dòng sau bước chuẩn hóa bằng pandas. Trong benchmark Spark, các dòng không hợp lệ hoặc không đạt điều kiện làm sạch bị loại bỏ, bao gồm timestamp không hợp lệ, quantity không dương hoặc unit price âm. Vì vậy số dòng benchmark retail là 531.283. Việc ghi rõ khác biệt này giúp tránh nhầm lẫn giữa số dòng raw/chuẩn hóa ban đầu và số dòng thật sự đi qua workload đo thời gian.

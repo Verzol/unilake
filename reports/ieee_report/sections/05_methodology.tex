@@ -1,0 +1,32 @@
+\section{Phương pháp nghiên cứu}
+
+Phương pháp của UniLake dựa trên nguyên tắc tam giác hóa bằng chứng: kết quả benchmark cục bộ, nguồn học thuật/tài liệu chính thức và lập luận kiến trúc. Cách tiếp cận này giúp tránh hai cực đoan: chỉ mô tả lý thuyết mà không có kết quả chạy được, hoặc chỉ nhìn số đo local rồi suy diễn quá mức sang production.
+
+\subsection{Thiết kế benchmark}
+
+Benchmark sử dụng cùng Spark engine cho cả hai đường lưu trữ. Với mỗi bảng, workflow gồm bốn bước:
+
+\begin{enumerate}
+\item Đọc dữ liệu đầu vào đã chuẩn hóa từ \texttt{data/benchmark\_input}.
+\item Làm sạch và ép kiểu dữ liệu bằng Spark.
+\item Ghi dữ liệu vào Parquet fallback hoặc Iceberg table.
+\item Đọc lại để đếm số dòng và chạy truy vấn tổng hợp tương đương.
+\end{enumerate}
+
+Các chỉ số được đo gồm \texttt{write\_seconds}, \texttt{read\_seconds}, \texttt{query\_seconds}, \texttt{row\_count}, \texttt{run\_id}, \texttt{storage\_path}, \texttt{status} và \texttt{notes}. Mỗi tổ hợp bảng--đường lưu trữ được chạy 3 lần. Thời gian được đo bằng \texttt{time.perf\_counter()} trong script Python.
+
+\subsection{Dữ liệu}
+
+Dữ liệu được chuẩn hóa từ các CSV thật trong thư mục \texttt{data/raw}: Online Retail, Twitter Entity Sentiment training/validation và IoT telemetry. Script \texttt{src/prepare\_real\_csv\_data.py} tạo ba bảng benchmark-ready:
+
+\begin{itemize}
+\item \texttt{retail\_transactions}: giao dịch bán lẻ, có doanh thu dòng \texttt{revenue = quantity * unit\_price}.
+\item \texttt{twitter\_sentiment}: tweet, entity, sentiment và độ dài văn bản.
+\item \texttt{iot\_sensor\_events}: timestamp, device, nhiệt độ, độ ẩm, chỉ số khí và motion.
+\end{itemize}
+
+Sau bước lọc hợp lệ trong Spark benchmark, số dòng được đo là 531.283 dòng retail, 75.682 dòng sentiment và 405.184 dòng IoT. Đây là dữ liệu đủ lớn để có thời gian đo rõ ràng trong local, nhưng vẫn nhỏ hơn rất nhiều so với Big Data production.
+
+\subsection{Nguyên tắc diễn giải}
+
+Mọi kết quả hiệu năng chỉ được diễn giải trong phạm vi môi trường Docker cục bộ. Báo cáo không dùng benchmark này để tuyên bố rằng Iceberg luôn nhanh hơn Parquet hoặc modern stack luôn thay thế legacy stack. Nếu một nhận định đến từ tài liệu công khai nhưng không được prototype kiểm chứng, báo cáo đánh dấu là chưa kiểm chứng.

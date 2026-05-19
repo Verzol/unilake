@@ -1,0 +1,17 @@
+FROM apache/spark:3.5.1
+
+USER root
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y \
+    python3-pip \
+    python3-venv \
+    curl \
+    procps \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt /app/requirements.txt
+RUN pip3 install --no-cache-dir --upgrade pip \
+    && pip3 install --no-cache-dir -r /app/requirements.txt
+
+CMD ["bash"]

@@ -1,0 +1,11 @@
+data/raw/
+data/benchmark_input/
+data/processed/
+spark-warehouse/
+derby.log
+metastore_db/
+.ipynb_checkpoints/
+__pycache__/
+*.pyc
+docs/
+*.log

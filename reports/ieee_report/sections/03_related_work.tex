@@ -1,0 +1,44 @@
+\section{Công trình liên quan}
+
+\subsection{Framework truyền thống}
+
+Kafka được giới thiệu như một hệ thống messaging phân tán cho log processing, hướng tới việc thu thập và phân phối sự kiện ở thông lượng cao với độ trễ thấp~\cite{kafkaPaper}. Đóng góp của Kafka nằm ở mô hình distributed commit log, cho phép nhiều consumer xử lý cùng một luồng sự kiện theo nhu cầu online hoặc offline. Trong kiến trúc legacy của UniLake, Kafka đại diện cho lớp ingestion. Trong prototype, Redpanda được dùng như một lựa chọn nhẹ hơn và tương thích Kafka API, phù hợp hơn với môi trường Docker cục bộ.
+
+HDFS là một nền tảng lưu trữ phân tán cho file lớn, tối ưu cho throughput và khả năng chịu lỗi trên cụm nhiều node~\cite{hdfsPaper}. HDFS đại diện cho thế hệ data lake on-premise, nơi dữ liệu thường được lưu thành file lớn và đọc bởi các engine xử lý phân tán. Tuy nhiên, HDFS không tự cung cấp các chức năng table management hiện đại như snapshot, schema evolution hoặc transaction log ở cấp bảng. Đây là một trong các động lực dẫn đến sự xuất hiện của lakehouse và open table formats.
+
+Spark phát triển từ abstraction Resilient Distributed Dataset, sau đó trở thành một engine thống nhất cho batch, SQL, streaming và machine learning~\cite{rddPaper,sparkCacm}. Trong UniLake, Spark là điểm chung của cả hai đường thực nghiệm, giúp benchmark tập trung vào lớp storage/table format thay vì so sánh hai engine xử lý khác nhau. Điều này cũng làm giảm nhiễu phương pháp luận: cùng phiên bản Spark, cùng logic làm sạch dữ liệu, cùng truy vấn tổng hợp và cùng số lần chạy.
+
+Presto được mô tả như một engine ``SQL on Everything'', cho phép truy vấn phân tán trên nhiều nguồn dữ liệu khác nhau~\cite{prestoPaper}. Trong kiến trúc legacy, Presto hoặc Trino thường đứng ở lớp interactive SQL phía trên HDFS/Parquet hoặc object storage. UniLake chưa triển khai Trino/StarRocks trong benchmark lõi; do đó các engine này chỉ được dùng trong phần so sánh kiến trúc và future work.
+
+\subsection{Parquet, Lakehouse và table formats}
+
+Dremel là một hệ thống phân tích ad-hoc quy mô web, kết hợp cây thực thi nhiều cấp và biểu diễn dữ liệu cột cho nested records~\cite{dremelPaper}. Dù Dremel không phải Parquet, các ý tưởng về columnar representation và phân tích trên dữ liệu lớn là nền tảng quan trọng cho các định dạng cột trong hệ sinh thái Big Data. Parquet kế thừa định hướng tối ưu cho workload phân tích: đọc một tập cột con, nén hiệu quả và hỗ trợ predicate/filter pushdown ở mức engine.
+
+Công trình Lakehouse của Armbrust và cộng sự lập luận rằng data lake và data warehouse có thể được hợp nhất bằng một kiến trúc mở, trong đó dữ liệu được lưu trên định dạng trực tiếp như Parquet/ORC và được quản lý bởi lớp metadata/table management~\cite{lakehousePaper}. Đây là khung lý thuyết chính của UniLake: hệ thống không cố thay thế Parquet, mà đặt Parquet trong một workflow có catalog và metadata rõ hơn.
+
+Delta Lake là một ví dụ tiêu biểu về ACID table storage trên cloud object stores, dùng transaction log để cung cấp ACID, time travel và tối ưu thao tác metadata trên dữ liệu lớn~\cite{deltaLakePaper}. Dù UniLake chọn Iceberg thay vì Delta Lake, công trình Delta Lake vẫn có giá trị vì chỉ ra các vấn đề của data lake thuần file trên object store: thao tác metadata đắt, cập nhật nhiều object không nguyên tử và khó đảm bảo nhất quán trong workload phức tạp.
+
+Apache Iceberg định nghĩa một table format quản lý các tập file dữ liệu lớn trên distributed file system hoặc object store. Đặc tả Iceberg mô tả bảng thông qua metadata files, schema, partition specs, snapshots, manifest lists và manifest files~\cite{icebergSpec}. Tài liệu Spark của Iceberg cũng khuyến nghị workflow ghi bằng DataFrameWriterV2, chẳng hạn \texttt{df.writeTo(t).create()} cho thao tác CTAS tương ứng~\cite{icebergSparkWrites}. Đây là API được dùng trong benchmark UniLake.
+
+\subsection{Về so sánh Iceberg và Parquet fallback}
+
+Trong quá trình khảo sát, nhóm không tìm thấy một bài báo học thuật chuẩn mực nào so sánh trực tiếp ``Iceberg với Parquet fallback'' như hai hệ thống cùng cấp. Điều này phù hợp về mặt khái niệm: Iceberg là table format còn Parquet là file format. Các bài báo liên quan chủ yếu so sánh kiến trúc lakehouse, transaction log/table format, hoặc phân tích giới hạn của data lake thuần file. Vì vậy, benchmark UniLake được viết là so sánh hai \textit{đường triển khai}: Spark + Parquet fallback và Spark + Iceberg table trên MinIO. Cách gọi này tránh nhầm lẫn rằng Iceberg và Parquet là hai định dạng file thay thế nhau.
+
+\begin{table*}[htbp]
+\centering
+\caption{Tóm tắt công trình liên quan và liên hệ với UniLake}
+\label{tab:related-work}
+\begin{tabularx}{\textwidth}{p{0.16\textwidth}X X X}
+\toprule
+Công trình & Đóng góp chính & Giới hạn khi áp dụng trực tiếp & Liên hệ với UniLake \\
+\midrule
+Kafka~\cite{kafkaPaper} & Distributed log cho ingestion thông lượng cao. & Không giải quyết quản lý bảng phân tích. & Baseline ingestion; Redpanda là biến thể nhẹ hơn cho local. \\
+HDFS~\cite{hdfsPaper} & Lưu trữ phân tán cho file lớn và throughput cao. & Triển khai local nặng; thiếu table metadata hiện đại. & Đại diện legacy storage. \\
+Spark~\cite{rddPaper,sparkCacm} & Engine thống nhất cho batch, SQL, streaming và ML. & Spark local không đại diện cluster nhiều node. & Engine chung cho cả hai đường benchmark. \\
+Presto~\cite{prestoPaper} & SQL phân tán trên nhiều nguồn dữ liệu. & Chưa chạy trong benchmark lõi. & Query layer mở rộng cho legacy/lakehouse. \\
+Lakehouse~\cite{lakehousePaper} & Hợp nhất data lake và warehouse bằng định dạng mở và metadata. & Cần table format cụ thể để triển khai. & Khung lý thuyết của UniLake. \\
+Delta Lake~\cite{deltaLakePaper} & ACID table storage trên object store. & Không phải table format được chọn trong prototype. & Bằng chứng về nhu cầu vượt qua data lake thuần file. \\
+Iceberg~\cite{icebergSpec,icebergSparkWrites} & Metadata, snapshot, schema/partition evolution cho bảng phân tích. & Cần cấu hình catalog, S3A và runtime tương thích. & Table format chính của đường modern. \\
+\bottomrule
+\end{tabularx}
+\end{table*}

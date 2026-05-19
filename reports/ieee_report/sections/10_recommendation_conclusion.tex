@@ -1,0 +1,13 @@
+\section{Khuyến nghị và kết luận}
+
+\subsection{Khuyến nghị}
+
+Đối với phạm vi học tập và prototype, UniLake nên giữ thiết kế Docker-first với Spark, MinIO và Iceberg làm lõi. Parquet fallback vẫn cần được duy trì vì nó là baseline đơn giản, dễ debug và giúp pipeline tiếp tục chạy nếu Iceberg/S3A gặp lỗi. Iceberg nên được dùng để minh họa lợi ích table format: metadata, snapshot, schema evolution và khả năng tích hợp nhiều engine.
+
+Đối với hướng mở rộng, nhóm nên bổ sung bốn nhóm thí nghiệm. Thứ nhất là schema evolution, ví dụ thêm cột mới vào bảng sentiment hoặc IoT và kiểm tra khả năng đọc dữ liệu cũ. Thứ hai là snapshot/time travel để chứng minh rõ lợi ích table-management của Iceberg. Thứ ba là compaction/file layout, vì file nhỏ có thể ảnh hưởng đáng kể đến hiệu năng local. Thứ tư là thêm Trino hoặc StarRocks để kiểm chứng multi-engine analytics thay vì chỉ dùng Spark SQL.
+
+\subsection{Kết luận}
+
+Báo cáo đã trình bày UniLake như một nguyên mẫu so sánh giữa đường Spark + Parquet fallback và Spark + Iceberg table trên MinIO, đồng thời đặt thực nghiệm này trong bối cảnh legacy Big Data stack và modern lakehouse architecture. Kết quả benchmark local trên ba bảng thực tế cho thấy Iceberg có thời gian trung bình thấp hơn Parquet fallback trong lần chạy hiện tại. Tuy nhiên, kết quả này chỉ là bằng chứng cục bộ và không chứng minh Iceberg luôn nhanh hơn Parquet.
+
+Đóng góp chính của UniLake nằm ở quy trình thực nghiệm có thể tái lập, cách tách biệt bằng chứng local với nguồn học thuật/công khai, và cách diễn giải đúng quan hệ giữa file format và table format. Trong phạm vi đề tài, modern lakehouse stack không thay thế tuyệt đối legacy stack; nó phù hợp hơn với mục tiêu quản lý bảng, metadata, snapshot và tái lập local, trong khi legacy stack vẫn có lợi thế về độ trưởng thành và hệ sinh thái production.
